@@ -1,5 +1,8 @@
 package com.example.formulariotestuam.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,14 +11,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,11 +24,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.formulariotestuam.model.PerfilEstudiante
+import com.example.formulariotestuam.ui.theme.UamPrimary
+import com.example.formulariotestuam.ui.theme.UamTextSecondary
 
 @Composable
 fun LoginScreen(
@@ -44,103 +45,130 @@ fun LoginScreen(
     val colegioValido = colegio.trim().length >= 3
     val formularioValido = nombreValido && correoValido && colegioValido
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "UAM Vocacional",
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center
-        )
-
-        Text(
-            text = "Test de orientación profesional",
-            style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            elevation = CardDefaults.cardElevation(4.dp)
+    UamBackground {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
-                modifier = Modifier.padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 })
             ) {
-                OutlinedTextField(
-                    value = nombre,
-                    onValueChange = { nombre = it },
-                    label = { Text("Nombre del estudiante") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    isError = intento && !nombreValido
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    UamLogoHeader(
+                        titulo = "UAM Vocacional",
+                        subtitulo = "Descubre áreas profesionales según tus intereses"
+                    )
 
-                OutlinedTextField(
-                    value = correo,
-                    onValueChange = { correo = it },
-                    label = { Text("Correo") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    isError = intento && !correoValido
-                )
+                    Spacer(modifier = Modifier.height(28.dp))
 
-                OutlinedTextField(
-                    value = colegio,
-                    onValueChange = { colegio = it },
-                    label = { Text("Colegio o institución") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    isError = intento && !colegioValido
-                )
+                    ModernCard {
+                        InfoPill(text = "Orientación profesional")
 
-                if (intento && !formularioValido) {
+                        Spacer(modifier = Modifier.height(18.dp))
+
+                        Text(
+                            text = "Datos del estudiante",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = UamPrimary,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        )
+
+                        Text(
+                            text = "Completa la información para iniciar tu test vocacional.",
+                            color = UamTextSecondary,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(18.dp))
+
+                        OutlinedTextField(
+                            value = nombre,
+                            onValueChange = { nombre = it },
+                            label = { Text("Nombre completo") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            isError = intento && !nombreValido,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = UamPrimary,
+                                focusedLabelColor = UamPrimary
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedTextField(
+                            value = correo,
+                            onValueChange = { correo = it },
+                            label = { Text("Correo") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            isError = intento && !correoValido,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = UamPrimary,
+                                focusedLabelColor = UamPrimary
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedTextField(
+                            value = colegio,
+                            onValueChange = { colegio = it },
+                            label = { Text("Colegio o institución") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            isError = intento && !colegioValido,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = UamPrimary,
+                                focusedLabelColor = UamPrimary
+                            )
+                        )
+
+                        if (intento && !formularioValido) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = "Revisa los campos antes de continuar.",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(22.dp))
+
+                        GradientButton(
+                            text = "Iniciar experiencia",
+                            onClick = {
+                                intento = true
+
+                                if (formularioValido) {
+                                    onIngresar(
+                                        PerfilEstudiante(
+                                            nombre = nombre,
+                                            correo = correo,
+                                            colegio = colegio
+                                        )
+                                    )
+                                }
+                            }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
                     Text(
-                        text = "Completa correctamente todos los campos.",
-                        color = MaterialTheme.colorScheme.error,
+                        text = "Esta aplicación es educativa y orientativa. No sustituye una evaluación psicológica profesional.",
+                        textAlign = TextAlign.Center,
+                        color = UamTextSecondary,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-
-                Button(
-                    onClick = {
-                        intento = true
-
-                        if (formularioValido) {
-                            onIngresar(
-                                PerfilEstudiante(
-                                    nombre = nombre,
-                                    correo = correo,
-                                    colegio = colegio
-                                )
-                            )
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Text("Ingresar")
-                }
             }
         }
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        Text(
-            text = "Esta app es educativa y orientativa. No sustituye la orientación profesional o psicológica de un especialista.",
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodySmall
-        )
     }
 }

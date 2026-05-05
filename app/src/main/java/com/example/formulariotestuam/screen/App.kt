@@ -1,93 +1,89 @@
 package com.example.formulariotestuam.screen
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.example.formulariotestuam.AppViewModel
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.example.formulariotestuam.data.VocacionalRepository
+import com.example.formulariotestuam.model.OpcionVocacional
+import com.example.formulariotestuam.model.Pantalla
+import com.example.formulariotestuam.model.PerfilEstudiante
+import com.example.formulariotestuam.model.ResultadoVocacional
 
 @Composable
-fun App(modifier: Modifier = Modifier) {
-    val navController = rememberNavController()
-    val viewModel: AppViewModel = viewModel()
+fun App() {
+    var pantallaActual by remember { mutableStateOf(Pantalla.LOGIN) }
+    var perfil by remember { mutableStateOf<PerfilEstudiante?>(null) }
+    var resultadoActual by remember { mutableStateOf<ResultadoVocacional?>(null) }
 
-    // Observamos el estado del ViewModel
-    val perfil by viewModel.perfil.collectAsState()
-    val respuestas by viewModel.respuestas.collectAsState()
-    val historial by viewModel.historial.collectAsState()
-    val resultadoActual by viewModel.resultadoActual.collectAsState()
+    val respuestas = remember { mutableStateMapOf<Int, OpcionVocacional>() }
+    val historial = remember { mutableStateListOf<ResultadoVocacional>() }
 
-    NavHost(
-        navController = navController,
-        startDestination = Rutas.LOGIN,
-        modifier = modifier
-    ) {
-        composable(Rutas.LOGIN) {
-            LoginScreen(
-                onIngresar = { nuevoPerfil ->
-                    viewModel.iniciarSesion(nuevoPerfil)
-                    navController.navigate(Rutas.INICIO) {
-                        popUpTo(Rutas.LOGIN) { inclusive = true }
+    Crossfade(targetState = pantallaActual) { pantalla ->
+        when (pantalla) {
+            Pantalla.LOGIN -> {
+                LoginScreen(
+                    onIngresar = { nuevoPerfil ->
+                        perfil = nuevoPerfil
+                        pantallaActual = Pantalla.INICIO
                     }
-                }
-            )
-        }
+                )
+            }
 
-        composable(Rutas.INICIO) {
-            HomeScreen(
-                perfil = perfil,
-                historial = historial,
-                onIniciarTest = {
-                    viewModel.limpiarRespuestas()
-                    navController.navigate(Rutas.TEST)
-                },
-                onCerrarSesion = {
-                    viewModel.cerrarSesion()
-                    navController.navigate(Rutas.LOGIN) {
-                        popUpTo(0) { inclusive = true }
+            Pantalla.INICIO -> {
+                HomeScreen(
+                    perfil = perfil,
+                    historial = historial,
+                    onIniciarTest = {
+                        respuestas.clear()
+                        pantallaActual = Pantalla.TEST
+                    },
+                    onCerrarSesion = {
+                        perfil = null
+                        respuestas.clear()
+                        resultadoActual = null
+                        pantallaActual = Pantalla.LOGIN
                     }
-                }
-            )
-        }
+                )
+            }
 
-        composable(Rutas.TEST) {
-            TestVocacionalScreen(
-                test = com.example.formulariotestuam.data.VocacionalRepository.testVocacional,
-                respuestas = respuestas,
-                onResponder = { indice, opcion ->
-                    viewModel.responder(indice, opcion)
-                },
-                onVolver = {
-                    navController.popBackStack()
-                },
-                onFinalizar = {
-                    viewModel.calcularYGuardarResultado()
-                    navController.navigate(Rutas.RESULTADO)
-                }
-            )
-        }
+            Pantalla.TEST -> {
+                TestVocacionalScreen(
+                    test = VocacionalRepository.testVocacional,
+                    respuestas = respuestas,
+                    onResponder = { indice, opcion ->
+                        respuestas[indice] = opcion
+                    },
+                    onVolver = {
+                        pantallaActual = Pantalla.INICIO
+                    },
+                    onFinalizar = {
+                        val resultado = VocacionalRepository.testVocacional.calcularResultado(respuestas.values)
+                        resultadoActual = resultado
+                        historial.add(resultado)
+                        pantallaActual = Pantalla.RESULTADO
+                    }
+                )
+            }
 
-        composable(Rutas.RESULTADO) {
-            ResultadoScreen(
-                perfil = perfil,
-                resultado = resultadoActual,
-                historial = historial,
-                onRepetirTest = {
-                    viewModel.limpiarRespuestas()
-                    navController.navigate(Rutas.TEST) {
-                        popUpTo(Rutas.RESULTADO) { inclusive = true }
+            Pantalla.RESULTADO -> {
+                ResultadoScreen(
+                    perfil = perfil,
+                    resultado = resultadoActual,
+                    historial = historial,
+                    onRepetirTest = {
+                        respuestas.clear()
+                        pantallaActual = Pantalla.TEST
+                    },
+                    onVolverInicio = {
+                        pantallaActual = Pantalla.INICIO
                     }
-                },
-                onVolverInicio = {
-                    navController.navigate(Rutas.INICIO) {
-                        popUpTo(Rutas.RESULTADO) { inclusive = true }
-                    }
-                }
-            )
+                )
+            }
         }
     }
 }

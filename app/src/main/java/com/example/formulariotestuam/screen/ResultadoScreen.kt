@@ -1,6 +1,11 @@
 package com.example.formulariotestuam.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,23 +13,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.formulariotestuam.model.PerfilEstudiante
 import com.example.formulariotestuam.model.ResultadoVocacional
+import com.example.formulariotestuam.ui.theme.UamAccent
+import com.example.formulariotestuam.ui.theme.UamPrimary
+import com.example.formulariotestuam.ui.theme.UamPrimaryDark
+import com.example.formulariotestuam.ui.theme.UamTextSecondary
+import com.example.formulariotestuam.ui.theme.White
 
 @Composable
 fun ResultadoScreen(
@@ -35,200 +42,183 @@ fun ResultadoScreen(
     onVolverInicio: () -> Unit
 ) {
     if (resultado == null) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("No hay resultado disponible.")
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(onClick = onVolverInicio) {
-                Text("Volver al inicio")
+        UamBackground {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("No hay resultado disponible.")
+                Spacer(modifier = Modifier.height(12.dp))
+                GradientButton(
+                    text = "Volver al inicio",
+                    onClick = onVolverInicio
+                )
             }
         }
-
         return
     }
 
     val area = resultado.areaPrincipal
+    val porcentaje = resultado.porcentajePrincipal()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            text = "Resultado vocacional",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Text(text = "Estudiante: ${perfil?.nombre ?: "Sin nombre"}")
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(26.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
-            )
+    UamBackground {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 3 })
             ) {
-                Text(
-                    text = "Área principal",
-                    fontWeight = FontWeight.Bold
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    SectionTitle(
+                        titulo = "Resultado vocacional",
+                        subtitulo = "Estudiante: ${perfil?.nombre ?: "Sin nombre"}"
+                    )
 
-                Text(
-                    text = area.titulo,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                Text(text = area.descripcion)
-
-                Text(
-                    text = "Compatibilidad aproximada: ${resultado.porcentajePrincipal()}%",
-                    fontWeight = FontWeight.Bold
-                )
-
-                LinearProgressIndicator(
-                    progress = resultado.porcentajePrincipal() / 100f,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(22.dp),
-            elevation = CardDefaults.cardElevation(3.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "Carreras sugeridas",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-
-                area.carreras.forEach { carrera ->
-                    Text(text = "• $carrera")
-                }
-            }
-        }
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(22.dp),
-            elevation = CardDefaults.cardElevation(3.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "Recomendación",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Text(text = area.recomendacion)
-            }
-        }
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(22.dp),
-            elevation = CardDefaults.cardElevation(3.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "Puntajes por área",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-
-                resultado.puntajes.toList()
-                    .sortedByDescending { it.second }
-                    .forEach { item ->
-                        val areaVocacional = item.first
-                        val puntaje = item.second
-
-                        Text(
-                            text = "${areaVocacional.titulo}: $puntaje puntos",
-                            fontWeight = if (areaVocacional == area) {
-                                FontWeight.Bold
-                            } else {
-                                FontWeight.Normal
+                    ModernCard {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(UamAccent)
+                                    .padding(26.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "$porcentaje%",
+                                    color = UamPrimaryDark,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Black
+                                )
                             }
-                        )
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Text(
+                                text = area.titulo,
+                                color = UamPrimary,
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = area.descripcion,
+                                color = UamTextSecondary,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            LinearProgressIndicator(
+                                progress = porcentaje / 100f,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(10.dp),
+                                color = UamPrimary,
+                                trackColor = UamAccent
+                            )
+                        }
                     }
-            }
-        }
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(22.dp),
-            elevation = CardDefaults.cardElevation(3.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "Historial de resultados",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                    CardBloqueModerno(titulo = "Carreras sugeridas", emoji = "🎓") {
+                        area.carreras.forEach { carrera ->
+                            Text(
+                                text = "• $carrera",
+                                modifier = Modifier.padding(vertical = 3.dp)
+                            )
+                        }
+                    }
 
-                if (historial.isEmpty()) {
-                    Text("Aún no hay resultados guardados.")
-                } else {
-                    historial.takeLast(5).asReversed().forEachIndexed { index, item ->
+                    CardBloqueModerno(titulo = "Recomendación", emoji = "💡") {
                         Text(
-                            text = "${index + 1}. ${item.areaPrincipal.titulo} - ${item.porcentajePrincipal()}%"
+                            text = area.recomendacion,
+                            color = UamTextSecondary
                         )
                     }
+
+                    CardBloqueModerno(titulo = "Puntajes por área", emoji = "📊") {
+                        resultado.puntajes.toList()
+                            .sortedByDescending { it.second }
+                            .forEach { item ->
+                                val areaVocacional = item.first
+                                val puntaje = item.second
+
+                                Text(
+                                    text = "${areaVocacional.titulo}: $puntaje puntos",
+                                    fontWeight = if (areaVocacional == area) {
+                                        FontWeight.Bold
+                                    } else {
+                                        FontWeight.Normal
+                                    },
+                                    modifier = Modifier.padding(vertical = 3.dp)
+                                )
+                            }
+                    }
+
+                    CardBloqueModerno(titulo = "Historial", emoji = "🕒") {
+                        if (historial.isEmpty()) {
+                            Text("Aún no hay resultados guardados.")
+                        } else {
+                            historial.takeLast(5).asReversed().forEachIndexed { index, item ->
+                                Text(
+                                    text = "${index + 1}. ${item.areaPrincipal.titulo} - ${item.porcentajePrincipal()}%",
+                                    modifier = Modifier.padding(vertical = 3.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = "Este resultado es orientativo. Para una decisión profesional completa debe complementarse con acompañamiento docente o psicológico.",
+                        textAlign = TextAlign.Center,
+                        color = UamTextSecondary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    GradientButton(
+                        text = "Repetir test",
+                        onClick = onRepetirTest
+                    )
+
+                    SoftButton(
+                        text = "Volver al inicio",
+                        onClick = onVolverInicio
+                    )
                 }
             }
         }
+    }
+}
 
+@Composable
+fun CardBloqueModerno(
+    titulo: String,
+    emoji: String,
+    contenido: @Composable () -> Unit
+) {
+    ModernCard {
         Text(
-            text = "Importante: este resultado es orientativo. Para una decisión profesional completa, debe complementarse con acompañamiento docente o psicológico.",
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodySmall
+            text = "$emoji  $titulo",
+            color = UamPrimary,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
         )
 
-        Button(
-            onClick = onRepetirTest,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text("Repetir test")
-        }
+        Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedButton(
-            onClick = onVolverInicio,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text("Volver al inicio")
-        }
+        contenido()
     }
 }
